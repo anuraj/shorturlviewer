@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>ShortURL - Preview</title>
+</head>
+
+<body>
+    <main class="container">
+        <div class="bg-light p-5 rounded mt-3">
+            <h1>Short URL Preview</h1>
+            <p class="lead">This tool will help you to find the actual URL from the short URLs.</p>
+            <form class="needs-validation" onsubmit="return showPreview(this)" novalidate>
+                <div class="form-floating mb-3">
+                    <input type="url" required class="form-control" id="UrlInput"
+                        placeholder="https://bit.ly/azure-design-principles">
+                    <label for="url">Short URL</label>
+                    <div class="invalid-feedback">
+                        Please provide the valid URL
+                    </div>
+                </div>
+                <!-- <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="IncludePreview">
+                    <label class="form-check-label" for="IncludePreview">Show <a href="https://ogp.me/"
+                            target="_blank">Open Graph</a> Preview</label>
+                </div> -->
+                <button id="submit" type="submit" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm" id="progress" style="display: none;"></span>
+                    Submit
+                </button>
+            </form>
+            <p class="lead">
+                <span id="link"></span>
+            </p>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        var showPreview = function (form) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            else {
+                document.getElementById("progress").style.display = "inline-block";
+                document.getElementById("submit").setAttribute("disabled", "disabled");
+                var urlInput = document.getElementById("UrlInput").value;
+                var response = $.get("/api/UrlResolver?url=" + urlInput, function (data, status) {
+                    document.getElementById("link").innerHTML = "<a href=\"" + data + "\" target=\"_blank\">" + data + "</a>";
+                    document.getElementById("progress").style.display = "none";
+                    document.getElementById("submit").removeAttribute("disabled");
+                });
+
+                return false;
+            }
+
+            form.classList.add('was-validated');
+        };
+    </script>
+</body>
+
+</html>
