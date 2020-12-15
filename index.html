@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
     <title>ShortURL - Preview</title>
+    <style>
+        .container {
+            width: auto;
+            max-width: 680px;
+            padding: 0 15px;
+        }
+    </style>
 </head>
 
 <body>
@@ -22,11 +29,11 @@
                         Please provide the valid URL
                     </div>
                 </div>
-                <!-- <div class="mb-3 form-check">
+                <div class="mb-3 form-check">
                     <input type="checkbox" class="form-check-input" id="IncludePreview">
                     <label class="form-check-label" for="IncludePreview">Show <a href="https://ogp.me/"
                             target="_blank">Open Graph</a> Preview</label>
-                </div> -->
+                </div>
                 <button id="submit" type="submit" class="btn btn-primary">
                     <span class="spinner-border spinner-border-sm" id="progress" style="display: none;"></span>
                     Submit
@@ -35,6 +42,15 @@
             <p class="lead">
                 <span id="link"></span>
             </p>
+            <div>
+                <div class="card" id="PreviewCard" style="display: none;">
+                    <img id="card-image" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title" id="card-title"></h5>
+                        <p class="card-text" id="card-text"></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
@@ -46,13 +62,20 @@
                 event.stopPropagation();
             }
             else {
-                document.getElementById("progress").style.display = "inline-block";
-                document.getElementById("submit").setAttribute("disabled", "disabled");
-                var urlInput = document.getElementById("UrlInput").value;
-                var response = $.get("/api/UrlResolver?url=" + urlInput, function (data, status) {
-                    document.getElementById("link").innerHTML = "<a href=\"" + data + "\" target=\"_blank\">" + data + "</a>";
-                    document.getElementById("progress").style.display = "none";
-                    document.getElementById("submit").removeAttribute("disabled");
+                $("#progress").css("display", "inline-block");
+                $("#submit").attr("disabled", "disabled");
+                var includePreview = $("#IncludePreview").is(':checked');
+                var urlInput = $("#UrlInput").val();
+                var response = $.get("/api/UrlResolver?url=" + encodeURI(urlInput) + "&ogp=" + includePreview, function (data, status) {
+                    $("#link").html("<a href=\"" + data.url + "\" target=\"_blank\">" + data.url + "</a>");
+                    $("#progress").css("display", "none");
+                    $("#submit").removeAttr("disabled");
+                    if (includePreview) {
+                        $("#PreviewCard").css("display", "block");
+                        $("#card-title").text(data.title);
+                        $("#card-text").text(data.description);
+                        $("#card-image").attr("src", data.image);
+                    }
                 });
 
                 return false;
