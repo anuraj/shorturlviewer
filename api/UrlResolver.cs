@@ -20,13 +20,6 @@ namespace DotnetThoughts.Web
 {
     public class UrlResolver
     {
-        private readonly SafebrowsingService _safebrowsingService;
-
-        public UrlResolver(SafebrowsingService safebrowsingService)
-        {
-            _safebrowsingService = safebrowsingService;
-        }
-
         [FunctionName("UrlResolver")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
@@ -47,11 +40,6 @@ namespace DotnetThoughts.Web
             }
 
             var actualUrl = await GetActualUrl(url, log);
-            var isItASafeUrl = await IsItASafeUrl(actualUrl);
-            if (!isItASafeUrl)
-            {
-                return new BadRequestObjectResult("Google Safe Browsing identified the URL as malicious.");
-            }
 
             if (includePreviewInResponse)
             {
@@ -63,39 +51,6 @@ namespace DotnetThoughts.Web
             {
                 Url = actualUrl
             });
-        }
-
-        private async Task<bool> IsItASafeUrl(string url)
-        {
-            var request = _safebrowsingService.ThreatMatches.Find(new FindThreatMatchesRequest()
-            {
-                Client = new ClientInfo
-                {
-                    ClientId = "preview.dotnetthoughts.net",
-                    ClientVersion = "1.5.2"
-                },
-                ThreatInfo = new ThreatInfo()
-                {
-                    ThreatTypes = new List<string> { "SOCIAL_ENGINEERING", "MALWARE", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION" },
-                    PlatformTypes = new List<string> { "ANY_PLATFORM" },
-                    ThreatEntryTypes = new List<string> { "URL" },
-                    ThreatEntries = new List<ThreatEntry>
-                    {
-                        new ThreatEntry
-                        {
-                            Url = url
-                        }
-                    }
-                }
-            });
-
-            var response = await request.ExecuteAsync();
-            if(response.Matches == null)
-            {
-                return true;
-            }
-            
-            return response.Matches.Count <= 0;
         }
 
         private async Task<object> GetPreview(string url, ILogger log)
